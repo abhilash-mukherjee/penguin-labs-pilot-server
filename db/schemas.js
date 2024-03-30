@@ -22,7 +22,7 @@ const sessionSchema = new mongoose.Schema({
     status: { type: String, required: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true },
-    module: { type: String, required: true }
+    module: { type: String, required: true },
 });
 
 // Define LateralMovementSessionParams Schema

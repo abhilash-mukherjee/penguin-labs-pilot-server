@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { auth } from '../middlewares/middlewares.js';
 import { game2Module, lateralMovementModule } from '../helpers/stringConstants.js';
+import { getSessionFilterForDateString } from '../helpers/methods.js';
 const router = express.Router();
 router.use(bodyParser.json());
 
@@ -135,7 +136,7 @@ router.post('/create-session', auth, async (req, res) => {
                 status: "NOT_STARTED",
                 createdBy: userId,
                 patient: patient._id,
-                module: sessionData.module
+                module: sessionData.module,
             });
             await newSession.save();
 
@@ -262,4 +263,53 @@ router.post('/end-session', auth, async (req, res) => {
     }
 });
 
+
+
+router.get('/sessions', auth, async (req, res) => {
+    try {
+        let { sortBy, module, patientName, limit, date} = req.query;
+
+        // Set default values if parameters are not provided
+        if (!sortBy) {
+            sortBy = 'desc'; // Default sort by descending creation date
+        }
+        if (!limit) {
+            limit = 10; // Default number of sessions to return
+        } else {
+            limit = parseInt(limit);
+        }
+
+        // Build filter object based on query parameters
+        const filter = {
+        };
+
+        if (date) {
+            filter.date = getSessionFilterForDateString(date);
+        }
+
+        if (module) {
+            filter.module = module;
+        }
+        if (patientName) {
+            filter['patient.name'] = patientName;
+        }
+
+        // Apply sorting based on sortBy parameter
+        let sortOption = { date: -1 }; // Default sort by descending creation date
+        if (sortBy === 'asc') {
+            sortOption = { date: 1 }; // Sort by ascending creation date
+        }
+
+        // Fetch sessions from DB based on filter and sorting
+        const sessions = await Session.find(filter).sort(sortOption).limit(limit);
+
+        res.json({ sessions });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 export default router;
+
+
