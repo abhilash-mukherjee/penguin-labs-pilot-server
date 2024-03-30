@@ -19,4 +19,6 @@ app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 });
 
-mongoose.connect(mongoDBURL).then(() => console.log("mongoose connected :", mongoDBURL));
+mongoose.connect(mongoDBURL, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("mongoose connected :", mongoDBURL))
+    .catch(err => console.error("mongoose connection error:", err));

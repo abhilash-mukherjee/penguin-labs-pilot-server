@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
 
 // Define Patient Schema
 const patientSchema = new mongoose.Schema({
-    mobile: String,
+    email: String,
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -53,7 +53,7 @@ const lateralMovementSessionParamsSchema = new mongoose.Schema({
 });
 
 // Define LateralMovementSessionData Schema
-const lateralMovementSessionDataSchema = new mongoose.Schema({
+const lateralMovementSessionMetricsSchema = new mongoose.Schema({
     sessionID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Session'
@@ -67,9 +67,27 @@ const lateralMovementSessionDataSchema = new mongoose.Schema({
     rightHits: Number
 });
 
+const game2SessionParamsSchema = new mongoose.Schema({
+    sessionID: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Session'
+    },
+});
+
+// Define LateralMovementSessionData Schema
+const game2SessionMetricsSchema = new mongoose.Schema({
+    sessionID: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Session'
+    },
+    score: Number
+});
+
 // Define models based on schemas
 export const User = mongoose.model('User', userSchema);
 export const Patient = mongoose.model('Patient', patientSchema);
 export const Session = mongoose.model('Session', sessionSchema);
 export const LateralMovementSessionParams = mongoose.model('LateralMovementSessionParams', lateralMovementSessionParamsSchema);
-export const LateralMovementSessionData = mongoose.model('LateralMovementSessionData', lateralMovementSessionDataSchema);
+export const LateralMovementSessionMetrics = mongoose.model('LateralMovementSessionMetrics', lateralMovementSessionMetricsSchema);
+export const Game2SessionParams = mongoose.model('Game2SessionParams', game2SessionParamsSchema);
+export const Game2SessionMetrics = mongoose.model('Game2SessionMetrics', game2SessionMetricsSchema);
