@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { User, Patient, Session, LateralMovementSessionParams, Game2SessionParams} from '../db/schemas.js';
+import { User, Patient, Session, LateralMovementSessionParams, Game2SessionParams } from '../db/schemas.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { auth } from '../middlewares/middlewares.js';
@@ -121,24 +121,13 @@ router.post('/create-session', auth, async (req, res) => {
 
         // Refactor common logic outside conditional blocks
         if (sessionData.module === lateralMovementModule || sessionData.module === game2Module) {
-            let sessionParamsSchema, SessionParamsModel;
+            let SessionParamsModel;
 
             if (sessionData.module === lateralMovementModule) {
-                sessionParamsSchema = LateralMovementSessionParams;
                 SessionParamsModel = LateralMovementSessionParams;
             } else if (sessionData.module === game2Module) {
-                sessionParamsSchema = Game2SessionParams;
                 SessionParamsModel = Game2SessionParams;
             }
-
-            try {
-                // Validate session params based on the module
-                const sessionParamsObject = new sessionParamsSchema(sessionData.sessionParams);
-                await sessionParamsObject.validate();
-            } catch (error) {
-                return res.status(400).json({ message: `Invalid session parameters for ${sessionData.module}` });
-            }
-
 
             // Create a new session object
             const newSession = new Session({
@@ -155,16 +144,21 @@ router.post('/create-session', auth, async (req, res) => {
                 sessionID: newSession._id,
                 ...sessionData.sessionParams
             });
-            await sessionParams.save();
+            try {
+                await sessionParams.save();
+            }
+            catch (e) {
+                return res.status(400).json({ message: e.message });
+            }
 
             req.app.locals.sessionData = { ...sessionData, id: String(newSession._id) };
-            
+
             console.log(`New ${sessionData.module} session created. \nData: `, req.app.locals.sessionData);
 
             return res.json({ message: `New ${sessionData.module} session created`, sessionData: req.app.locals.sessionData });
         }
-        
-        else{
+
+        else {
             return res.status(400).json({ message: "Module does not exist" });
         }
 
