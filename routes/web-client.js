@@ -267,7 +267,7 @@ router.post('/end-session', auth, async (req, res) => {
 
 router.get('/sessions', auth, async (req, res) => {
     try {
-        let { sortBy, module, patientName, limit, date} = req.query;
+        let { sortBy, module, patientName, limit, date } = req.query;
 
         // Set default values if parameters are not provided
         if (!sortBy) {
@@ -309,7 +309,7 @@ router.get('/sessions', auth, async (req, res) => {
     }
 });
 
-router.get('/session-details', async (req, res) => {
+router.get('/session-details', auth, async (req, res) => {
     try {
         const { id } = req.query;
 
@@ -353,6 +353,17 @@ router.get('/session-details', async (req, res) => {
 });
 
 
+router.get('/me', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) return res.status(400).json({ message: "user not found" });
+        const userDetails = { ...user.toObject() };
+        return res.json({ userDetails });
+    }
+    catch(e){
+        res.status(500).json({ message: error.message });
+
+    }
+})
+
 export default router;
-
-
