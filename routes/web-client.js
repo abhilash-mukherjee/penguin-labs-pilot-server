@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { User, Patient, Session, LateralMovementSessionParams, Game2SessionParams } from '../db/schemas.js';
+import { User, Patient, Session, LateralMovementSessionParams, Game2SessionParams, LateralMovementSessionMetrics, Game2SessionMetrics } from '../db/schemas.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { auth } from '../middlewares/middlewares.js';
@@ -304,6 +304,49 @@ router.get('/sessions', auth, async (req, res) => {
         const sessions = await Session.find(filter).sort(sortOption).limit(limit);
 
         res.json({ sessions });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+router.get('/session-details', async (req, res) => {
+    try {
+        const { id } = req.query;
+
+        // Check if ID is passed
+        if (!id) {
+            return res.status(400).json({ message: 'Session ID is required' });
+        }
+
+        // Try fetching the session with the provided ID from the database
+        const session = await Session.findById(id);
+        if (!session) {
+            return res.status(404).json({ message: 'Session not found' });
+        }
+
+        // Initialize session data object
+        const sessionData = { ...session.toObject() };
+
+        // Fetch corresponding session params and metrics based on the module
+        let sessionParams = null;
+        let sessionMetrics = null;
+        if (sessionData.module === lateralMovementModule) {
+            sessionParams = await LateralMovementSessionParams.findOne({ sessionID: id });
+            sessionMetrics = await LateralMovementSessionMetrics.findOne({ sessionID: id });
+        } else if (sessionData.module === game2Module) {
+            sessionParams = await Game2SessionParams.findOne({ sessionID: id });
+            sessionMetrics = await Game2SessionMetrics.findOne({ sessionID: id });
+        }
+
+        // Construct the response JSON
+        const responseData = {
+            sessionData,
+            sessionParams: sessionParams ? sessionParams.toObject() : {},
+            sessionMetrics: sessionMetrics ? sessionMetrics.toObject() : {}
+        };
+
+        // Return the response JSON
+        res.json(responseData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
