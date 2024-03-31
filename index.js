@@ -2,11 +2,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import unityClientRouter from './routes/unity-client.js';
 import webClientRouter from './routes/web-client.js';
-import { mongoDBURL } from './helpers/stringConstants.js';
+import { PORT, mongoDBURL } from './helpers/stringConstants.js';
 import cors from 'cors'
 
 const app = express();
-const port = 3000;
+const port = PORT;
 
 let sessionData;
 export {sessionData};
