@@ -2,8 +2,9 @@
 
 import jwt from 'jsonwebtoken';
 import { User } from '../db/schemas.js';
+import { unityClientSecret } from '../helpers/stringConstants.js';
 
-const auth = async (req, res, next) => {
+export const auth = async (req, res, next) => {
     try {
         // Get the token from the request headers
         const authHeader = req.headers.authorization;
@@ -41,4 +42,14 @@ const auth = async (req, res, next) => {
     }
 };
 
-export { auth };
+export const unityClientAuth = (req, res, next) => {
+    const secretHeader = req.headers['unity-client-secret'];
+
+    // Check if the secret is provided in the header
+    if (!secretHeader || secretHeader !== unityClientSecret) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // If the secret matches, call next to proceed with the next middleware/route handler
+    next();
+};
