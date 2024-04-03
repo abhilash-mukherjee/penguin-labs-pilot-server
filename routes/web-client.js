@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { User, Patient, Session, LateralMovementSessionParams, Game2SessionParams, LateralMovementSessionMetrics, Game2SessionMetrics } from '../db/schemas.js';
+import { User, Session, LateralMovementSessionParams, Game2SessionParams, LateralMovementSessionMetrics, Game2SessionMetrics } from '../db/schemas.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { auth } from '../middlewares/middlewares.js';
@@ -101,26 +101,14 @@ router.post('/create-session', auth, async (req, res) => {
 
         // Check if all other params are supplied correctly
         const { patientDetails, sessionParams } = sessionData;
-        if (!patientDetails || !patientDetails.email || !patientDetails.name || !patientDetails.ailment) {
+        if (!patientDetails || !patientDetails.name || !patientDetails.ailment) {
             return res.status(400).json({ message: "Invalid patient details" });
         }
         if (!sessionParams) {
             return res.status(400).json({ message: "Session parameters are required" });
         }
 
-        // Check if the patient with corresponding email exists, if not, create the patient and save it in db
-        let patient = await Patient.findOne({ email: patientDetails.email });
-        if (!patient) {
-            patient = new Patient({
-                email: patientDetails.email,
-                createdBy: userId,
-                ailment: patientDetails.ailment,
-                name: patientDetails.name
-            });
-            await patient.save();
-        }
 
-        // Refactor common logic outside conditional blocks
         if (sessionData.module === lateralMovementModule || sessionData.module === game2Module) {
             let SessionParamsModel;
 
@@ -135,8 +123,10 @@ router.post('/create-session', auth, async (req, res) => {
                 date: new Date(),
                 status: "NOT_STARTED",
                 createdBy: userId,
-                patient: patient._id,
                 module: sessionData.module,
+                patientName: patientDetails.name,
+                patientEmail: patientDetails.email,
+                ailment: patientDetails.ailment
             });
             await newSession.save();
 
@@ -152,7 +142,7 @@ router.post('/create-session', auth, async (req, res) => {
                 return res.status(400).json({ message: e.message });
             }
 
-            req.app.locals.sessionData = { ...sessionData, id: String(newSession._id) };
+            req.app.locals.sessionData = { ...newSession.toObject(), id: String(newSession._id), sessionParams: {...sessionParams.toObject()} };
 
             console.log(`New ${sessionData.module} session created. \nData: `, req.app.locals.sessionData);
 
@@ -185,7 +175,7 @@ router.post('/pause-session', auth, async (req, res) => {
         }
 
         // Update session status to "PAUSED" in the local sessionData
-        req.app.locals.sessionData.sessionStatus = "PAUSED";
+        req.app.locals.sessionData.status = "PAUSED";
 
         // Update session status in the database
         const session = await Session.findById(id);
@@ -216,7 +206,7 @@ router.post('/resume-session', auth, async (req, res) => {
         }
 
         // Update session status to "RUNNING" in the local sessionData
-        req.app.locals.sessionData.sessionStatus = "RUNNING";
+        req.app.locals.sessionData.status = "RUNNING";
 
         // Update session status in the database
         const session = await Session.findById(id);
@@ -264,10 +254,10 @@ router.post('/end-session', auth, async (req, res) => {
 });
 
 
-
 router.get('/sessions', auth, async (req, res) => {
     try {
-        let { sortBy, module, patientName, limit, date } = req.query;
+        let { sortBy, module, patientName, limit, date, email } = req.query;
+        const userId = req.userId; // Assuming auth middleware adds userId
 
         // Set default values if parameters are not provided
         if (!sortBy) {
@@ -281,6 +271,7 @@ router.get('/sessions', auth, async (req, res) => {
 
         // Build filter object based on query parameters
         const filter = {
+            createdBy: userId // Filter sessions by user ID
         };
 
         if (date) {
@@ -291,7 +282,10 @@ router.get('/sessions', auth, async (req, res) => {
             filter.module = module;
         }
         if (patientName) {
-            filter['patient.name'] = patientName;
+            filter.patientName = patientName; // Directly filter by patient name
+        }
+        if (email) {
+            filter.patientEmail = email; // Directly filter by patient email
         }
 
         // Apply sorting based on sortBy parameter
@@ -301,13 +295,16 @@ router.get('/sessions', auth, async (req, res) => {
         }
 
         // Fetch sessions from DB based on filter and sorting
-        const sessions = await Session.find(filter).sort(sortOption).limit(limit);
+        const sessions = await Session.find(filter)
+            .sort(sortOption)
+            .limit(limit);
 
         res.json({ sessions });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
+
 
 router.get('/session-details', auth, async (req, res) => {
     try {
@@ -360,10 +357,16 @@ router.get('/me', auth, async (req, res) => {
         const userDetails = { ...user.toObject() };
         return res.json({ userDetails });
     }
-    catch(e){
+    catch (e) {
         res.status(500).json({ message: error.message });
 
     }
 })
+
+router.get('/current-session', auth, (req, res) => {
+    res.json({
+        sessionData: req.app.locals.sessionData
+    });
+});
 
 export default router;

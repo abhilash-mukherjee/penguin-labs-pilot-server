@@ -37,6 +37,29 @@ router.post('/end-session', unityClientAuth, async (req, res) => {
     }
 });
 
+router.post('/start-session', unityClientAuth, async (req, res) => {
+    try {
+        if(!req.app.locals.sessionData){
+            return res.status(400).json({message: "no active session"});
+        }
+        const session = await Session.findById(req.app.locals.sessionData.id);
+        if (!session) {
+            return res.status(404).json({ message: "Session not found" });
+        }
+        session.status = "RUNNING";
+        await session.save();
+        if(!!req.app.locals.sessionData.status) req.app.locals.sessionData.status = "RUNNING" ;
+        res.json({
+            message: "session started",
+            sessionData: req.app.locals.sessionData
+        });
+    } catch (e) {
+        res.status(500).json({
+            message: e.message
+        });
+    }
+});
+
 router.post('/metrics', unityClientAuth, async (req, res) => {
     try {
         const { id, sessionMetrics } = req.body;
