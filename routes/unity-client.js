@@ -1,8 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { unityClientAuth } from '../middlewares/middlewares.js';
-import { Game2SessionMetrics, LateralMovementSessionMetrics, Session } from '../db/schemas.js';
-import { game2Module, lateralMovementModule } from '../helpers/stringConstants.js';
+import { GrabAndReachoutMetrics, LateralMovementSessionMetrics, Session } from '../db/schemas.js';
+import { GrabAndReachoutModule, lateralMovementModule } from '../helpers/stringConstants.js';
 
 const router = express.Router();
 router.use(bodyParser.json());
@@ -80,8 +80,8 @@ router.post('/metrics', unityClientAuth, async (req, res) => {
             });
             await lateralMovementMetrics.save();
             return res.json({ message: 'Session metrics saved', metrics: lateralMovementMetrics });
-        } else if (existingSession.module === game2Module) {
-            const game2Metrics = new Game2SessionMetrics({
+        } else if (existingSession.module === GrabAndReachoutModule) {
+            const game2Metrics = new GrabAndReachoutMetrics({
                 sessionID: id,
                 ...sessionMetrics
             });
