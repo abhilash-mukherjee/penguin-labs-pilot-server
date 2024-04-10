@@ -1,10 +1,10 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { User, Session, LateralMovementSessionParams, Game2SessionParams, LateralMovementSessionMetrics, Game2SessionMetrics } from '../db/schemas.js';
+import { User, Session, LateralMovementSessionParams, GrabAndReachoutParams, LateralMovementSessionMetrics, GrabAndReachoutMetrics } from '../db/schemas.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { auth } from '../middlewares/middlewares.js';
-import { game2Module, lateralMovementModule } from '../helpers/stringConstants.js';
+import { GrabAndReachoutModule as grabAndReachoutModule, lateralMovementModule } from '../helpers/stringConstants.js';
 import { getSessionFilterForDateString } from '../helpers/methods.js';
 const router = express.Router();
 router.use(bodyParser.json());
@@ -109,13 +109,12 @@ router.post('/create-session', auth, async (req, res) => {
         }
 
 
-        if (sessionData.module === lateralMovementModule || sessionData.module === game2Module) {
+        if (sessionData.module === lateralMovementModule || sessionData.module === grabAndReachoutModule) {
             let SessionParamsModel;
-
             if (sessionData.module === lateralMovementModule) {
                 SessionParamsModel = LateralMovementSessionParams;
-            } else if (sessionData.module === game2Module) {
-                SessionParamsModel = Game2SessionParams;
+            } else if (sessionData.module === grabAndReachoutModule) {
+                SessionParamsModel = GrabAndReachoutParams;
             }
 
             // Create a new session object
@@ -136,7 +135,8 @@ router.post('/create-session', auth, async (req, res) => {
                 ...sessionData.sessionParams
             });
             try {
-                await sessionParams.save();
+                const savedParam = await sessionParams.save();
+                console.log("params saved:",savedParam);
             }
             catch (e) {
                 return res.status(400).json({ message: e.message });
@@ -330,9 +330,9 @@ router.get('/session-details', auth, async (req, res) => {
         if (sessionData.module === lateralMovementModule) {
             sessionParams = await LateralMovementSessionParams.findOne({ sessionID: id });
             sessionMetrics = await LateralMovementSessionMetrics.findOne({ sessionID: id });
-        } else if (sessionData.module === game2Module) {
-            sessionParams = await Game2SessionParams.findOne({ sessionID: id });
-            sessionMetrics = await Game2SessionMetrics.findOne({ sessionID: id });
+        } else if (sessionData.module === grabAndReachoutModule) {
+            sessionParams = await GrabAndReachoutParams.findOne({ sessionID: id });
+            sessionMetrics = await GrabAndReachoutMetrics.findOne({ sessionID: id });
         }
 
         // Construct the response JSON

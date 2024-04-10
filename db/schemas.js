@@ -18,7 +18,7 @@ const sessionSchema = new mongoose.Schema({
     module: { type: String, required: true },
     patientName: { type: String, required: true },
     ailment: { type: String, required: true },
-    patientEmail: { type: String},
+    patientEmail: { type: String },
 });
 
 // Define LateralMovementSessionParams Schema
@@ -49,14 +49,33 @@ const lateralMovementSessionMetricsSchema = new mongoose.Schema({
     rightHits: { type: Number, required: true }
 });
 
+const boxSchema = new mongoose.Schema({
+    boxX: { type: Number, required: true },
+    boxZ: { type: Number, required: true },
+    label: { type: String, required: true },
+    colorLight: { type: String, required: true },
+    colorDark: { type: String, required: true }
+});
+
+const sphereSchema = new mongoose.Schema({
+    spawnCentreX: { type: Number, required: true },
+    spawnCentreZ: { type: Number, required: true },
+    zoneWidth: { type: Number, required: true },
+    color: { type: String, required: true },
+    label: { type: String, required: true }
+});
+
 // Define Game2SessionParams Schema
-const game2SessionParamsSchema = new mongoose.Schema({
+const grabAndReachoutParamsSchema = new mongoose.Schema({
     sessionID: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', required: true },
-    targetSide: { type: String, required: true },
+    targetHand: { type: String, required: true },
+    reps: { type: Number, required: true },
+    boxes: [boxSchema],
+    spheres: [sphereSchema]
 });
 
 // Define Game2SessionMetrics Schema
-const game2SessionMetricsSchema = new mongoose.Schema({
+const grabAndReachoutMetricsSchema = new mongoose.Schema({
     sessionID: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', required: true },
     score: { type: Number, required: true }
 });
@@ -67,5 +86,5 @@ export const User = mongoose.model('User', userSchema);
 export const Session = mongoose.model('Session', sessionSchema);
 export const LateralMovementSessionParams = mongoose.model('LateralMovementSessionParams', lateralMovementSessionParamsSchema);
 export const LateralMovementSessionMetrics = mongoose.model('LateralMovementSessionMetrics', lateralMovementSessionMetricsSchema);
-export const Game2SessionParams = mongoose.model('Game2SessionParams', game2SessionParamsSchema);
-export const Game2SessionMetrics = mongoose.model('Game2SessionMetrics', game2SessionMetricsSchema);
+export const GrabAndReachoutParams = mongoose.model('GrabAndReachoutParams', grabAndReachoutParamsSchema);
+export const GrabAndReachoutMetrics = mongoose.model('GrabAndReachoutMetrics', grabAndReachoutMetricsSchema);
