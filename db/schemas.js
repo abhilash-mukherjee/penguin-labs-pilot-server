@@ -34,7 +34,8 @@ const lateralMovementSessionParamsSchema = new mongoose.Schema({
     cubeScaleDecimeters: { type: Number, required: true },
     spawningDistanceMetres: { type: Number, required: true },
     spawnHeightDecimetres: { type: Number, required: true },
-    zThresholdInMetres: { type: Number, required: true }
+    zThresholdInMetres: { type: Number, required: true },
+    environment: {type: Number }
 });
 
 // Define LateralMovementSessionData Schema
